@@ -4,9 +4,15 @@ from datetime import datetime
 class Unit(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     name: str = Field(index=True)
-    last_contact: datetime = Field(default=None, index=True)
+    last_contact: str = Field(default=None, index=True)
     status: str = Field(index=True)
     info: str | None = Field()
+
+# class UnitUpdate(SQLModel):
+#     name: str = Field()
+#     last_contact: str = Field()
+#     status: str = Field()
+#     info: str = Field()
 
 class UserBase(SQLModel):
     username: str = Field(index=True, unique=True)

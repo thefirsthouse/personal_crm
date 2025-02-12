@@ -101,3 +101,12 @@ async def read_unit(unit_id: int, session=Depends(get_session)):
     if not unit:
         raise HTTPException(status_code=404, detail="Unit not found")
     return unit
+
+
+@app.put('/units/{unit_id}', response_model=Unit)
+async def update_unit(unit_id: int, new_data: Unit, session=Depends(get_session)):
+    '''updates unit data'''
+    unit = session.get(Unit, unit_id)
+    for key, value in new_data.dict().items():
+        setattr(unit, key, value)
+    return push_unit(session, unit)
