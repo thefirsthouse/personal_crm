@@ -4,7 +4,7 @@ from datetime import datetime
 class Unit(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     name: str = Field(index=True)
-    last_contact: datetime = Field(default=None, index=True)
+    last_contact: str = Field(default=None, index=True)
     status: str = Field(index=True)
     info: str | None = Field()
 
