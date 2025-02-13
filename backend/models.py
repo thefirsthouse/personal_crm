@@ -8,12 +8,6 @@ class Unit(SQLModel, table=True):
     status: str = Field(index=True)
     info: str | None = Field()
 
-# class UnitUpdate(SQLModel):
-#     name: str = Field()
-#     last_contact: str = Field()
-#     status: str = Field()
-#     info: str = Field()
-
 class UserBase(SQLModel):
     username: str = Field(index=True, unique=True)
     email: str = Field(unique=True)

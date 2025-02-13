@@ -107,6 +107,8 @@ async def read_unit(unit_id: int, session=Depends(get_session)):
 async def update_unit(unit_id: int, new_data: Unit, session=Depends(get_session)):
     '''updates unit data'''
     unit = session.get(Unit, unit_id)
+    if not unit:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='unit not found')
     for key, value in new_data.dict().items():
         setattr(unit, key, value)
     return push_unit(session, unit)
