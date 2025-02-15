@@ -1,6 +1,6 @@
 '''main module for the backend'''
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -27,6 +27,8 @@ async def startup_event():
     metadata using the provided engine.
     """
     SQLModel.metadata.create_all(engine)
+
+
 
 
 @app.post('/users/new', response_model=User)
@@ -81,7 +83,7 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
     return current_user
 
 
-# main functional code block
+# ===============================main functional code block=============================
 
 
 @app.post("/new", response_model=Unit)
@@ -91,8 +93,45 @@ async def create_unit(unit: Unit, session=Depends(get_session)):
 
 @app.get("/", response_model=list[Unit])
 async def read_units(session=Depends(get_session), offset: int = 0, limit: int = 100):
-    '''returns a list of units'''
-    return session.exec(select(Unit).offset(offset).limit(limit)).all()
+    """Returns a list of units with updated status"""
+    data = session.exec(select(Unit).offset(offset).limit(limit)).all()
+    
+    units_list = []
+    updated = False  # Флаг, чтобы коммитить только при изменениях
+
+    for unit in data:
+        overdued = False
+        
+        if unit.last_contact:
+            last_contact_date = unit.last_contact
+
+            # Если last_contact строка, конвертируем в date
+            if isinstance(last_contact_date, str):
+                try:
+                    last_contact_date = datetime.strptime(last_contact_date, "%Y-%m-%d").date()
+                except ValueError:
+                    continue
+
+            # Проверяем, прошло ли более 90 дней
+            if (datetime.now().date() - last_contact_date).days >= 90:
+                overdued = True
+
+        # Если статус изменился — обновляем его в БД
+        new_status = "not ok" if overdued else "ok"
+        if unit.status != new_status:
+            unit.status = new_status
+            updated = True  # Помечаем, что изменения есть
+        
+        # Добавляем в список для ответа
+        units_list.append(unit.model_dump())
+
+    # Если были изменения — коммитим в БД
+    if updated:
+        session.commit()
+
+    return units_list
+
+
 
 @app.get("/units/{unit_id}", response_model=Unit)
 async def read_unit(unit_id: int, session=Depends(get_session)):
